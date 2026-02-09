@@ -1,0 +1,32 @@
+[
+  {
+    "email": "founder@progoxperts.com",
+    "password_hash": "$2b$10$randomhash1",
+    "full_name": "Rajesh Kumar",
+    "role": "Founder"
+  },
+  {
+    "email": "sales@progoxperts.com",
+    "password_hash": "$2b$10$randomhash2",
+    "full_name": "Priya Sharma",
+    "role": "Sales Head"
+  },
+  {
+    "email": "finance@progoxperts.com",
+    "password_hash": "$2b$10$randomhash3",
+    "full_name": "Amit Patel",
+    "role": "Finance Head"
+  },
+  {
+    "email": "operations@progoxperts.com",
+    "password_hash": "$2b$10$randomhash4",
+    "full_name": "Sunita Reddy",
+    "role": "Operations Manager"
+  },
+  {
+    "email": "distributor@progoxperts.com",
+    "password_hash": "$2b$10$randomhash5",
+    "full_name": "Vikram Singh",
+    "role": "Distributor Manager"
+  }
+]

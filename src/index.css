@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #F5F5F5;
+}
+
+@layer components {
+  .kpi-card {
+    @apply bg-white rounded-lg shadow-md p-6 transition-all hover:shadow-lg;
+  }
+  
+  .kpi-card-green {
+    @apply border-l-4 border-success;
+  }
+  
+  .kpi-card-amber {
+    @apply border-l-4 border-warning;
+  }
+  
+  .kpi-card-red {
+    @apply border-l-4 border-danger;
+  }
+  
+  .chart-container {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-dark transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-white px-4 py-2 rounded-lg hover:bg-secondary-dark transition-colors;
+  }
+}

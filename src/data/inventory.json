@@ -1,0 +1,164 @@
+[
+  {
+    "product_code": "EO-20W40",
+    "current_stock_liters": 52013.83,
+    "reserved_stock": 4589.75,
+    "reorder_point": 14174.71,
+    "max_stock_level": 130034.58,
+    "last_restock_date": "2025-12-29",
+    "last_restock_quantity": 49346.74
+  },
+  {
+    "product_code": "EO-15W40",
+    "current_stock_liters": 39356.01,
+    "reserved_stock": 3250.49,
+    "reorder_point": 12303.21,
+    "max_stock_level": 98390.03,
+    "last_restock_date": "2026-01-21",
+    "last_restock_quantity": 45493.67
+  },
+  {
+    "product_code": "EO-10W30",
+    "current_stock_liters": 81631.71,
+    "reserved_stock": 8232.75,
+    "reorder_point": 13954.45,
+    "max_stock_level": 204079.28,
+    "last_restock_date": "2026-01-15",
+    "last_restock_quantity": 68875.42
+  },
+  {
+    "product_code": "EO-5W30",
+    "current_stock_liters": 41678.36,
+    "reserved_stock": 5253.67,
+    "reorder_point": 9443.44,
+    "max_stock_level": 104195.9,
+    "last_restock_date": "2026-02-01",
+    "last_restock_quantity": 40374.7
+  },
+  {
+    "product_code": "EO-0W20",
+    "current_stock_liters": 60394.03,
+    "reserved_stock": 8518.78,
+    "reorder_point": 14562.49,
+    "max_stock_level": 150985.08,
+    "last_restock_date": "2026-01-04",
+    "last_restock_quantity": 60923.98
+  },
+  {
+    "product_code": "IL-HYD46",
+    "current_stock_liters": 55193.49,
+    "reserved_stock": 2792.67,
+    "reorder_point": 16872.24,
+    "max_stock_level": 137983.73,
+    "last_restock_date": "2026-02-01",
+    "last_restock_quantity": 64134.94
+  },
+  {
+    "product_code": "IL-HYD68",
+    "current_stock_liters": 81662.76,
+    "reserved_stock": 5891.43,
+    "reorder_point": 21976.61,
+    "max_stock_level": 204156.9,
+    "last_restock_date": "2026-01-15",
+    "last_restock_quantity": 85120.99
+  },
+  {
+    "product_code": "IL-GEAR90",
+    "current_stock_liters": 115202.27,
+    "reserved_stock": 15825.48,
+    "reorder_point": 20808.65,
+    "max_stock_level": 288005.67,
+    "last_restock_date": "2026-01-25",
+    "last_restock_quantity": 114215.07
+  },
+  {
+    "product_code": "IL-TURB32",
+    "current_stock_liters": 58224.48,
+    "reserved_stock": 5270.65,
+    "reorder_point": 17555.25,
+    "max_stock_level": 145561.2,
+    "last_restock_date": "2026-01-05",
+    "last_restock_quantity": 64805.27
+  },
+  {
+    "product_code": "IL-COMP100",
+    "current_stock_liters": 88218.3,
+    "reserved_stock": 12503.24,
+    "reorder_point": 18376.91,
+    "max_stock_level": 220545.75,
+    "last_restock_date": "2026-01-03",
+    "last_restock_quantity": 88403.05
+  },
+  {
+    "product_code": "GR-MP2",
+    "current_stock_liters": 37632.61,
+    "reserved_stock": 3135.05,
+    "reorder_point": 6748.75,
+    "max_stock_level": 94081.52,
+    "last_restock_date": "2025-12-27",
+    "last_restock_quantity": 44500.14
+  },
+  {
+    "product_code": "GR-MP3",
+    "current_stock_liters": 25545.73,
+    "reserved_stock": 3502.42,
+    "reorder_point": 6679.14,
+    "max_stock_level": 63864.32,
+    "last_restock_date": "2026-01-20",
+    "last_restock_quantity": 28737.77
+  },
+  {
+    "product_code": "GR-HTG",
+    "current_stock_liters": 21465.79,
+    "reserved_stock": 1783.72,
+    "reorder_point": 6114.5,
+    "max_stock_level": 53664.48,
+    "last_restock_date": "2026-01-20",
+    "last_restock_quantity": 24059.49
+  },
+  {
+    "product_code": "GR-WP",
+    "current_stock_liters": 47986.3,
+    "reserved_stock": 3817.58,
+    "reorder_point": 8050.25,
+    "max_stock_level": 119965.75,
+    "last_restock_date": "2025-12-29",
+    "last_restock_quantity": 57001.12
+  },
+  {
+    "product_code": "SO-TRANS",
+    "current_stock_liters": 15886.85,
+    "reserved_stock": 2364.58,
+    "reorder_point": 5163.81,
+    "max_stock_level": 39717.12,
+    "last_restock_date": "2026-01-28",
+    "last_restock_quantity": 14654.91
+  },
+  {
+    "product_code": "SO-BRAKE",
+    "current_stock_liters": 24550.25,
+    "reserved_stock": 2053.69,
+    "reorder_point": 6146.5,
+    "max_stock_level": 61375.62,
+    "last_restock_date": "2026-02-02",
+    "last_restock_quantity": 24416.76
+  },
+  {
+    "product_code": "SO-COOL",
+    "current_stock_liters": 33409.3,
+    "reserved_stock": 4240.6,
+    "reorder_point": 6613.51,
+    "max_stock_level": 83523.25,
+    "last_restock_date": "2025-12-30",
+    "last_restock_quantity": 30361.39
+  },
+  {
+    "product_code": "SO-2T",
+    "current_stock_liters": 33174.54,
+    "reserved_stock": 4848.66,
+    "reorder_point": 6265.14,
+    "max_stock_level": 82936.35,
+    "last_restock_date": "2025-12-26",
+    "last_restock_quantity": 32612.31
+  }
+]

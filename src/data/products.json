@@ -1,0 +1,146 @@
+[
+  {
+    "product_code": "EO-20W40",
+    "product_name": "Engine Oil 20W40",
+    "category": "Engine Oil",
+    "subcategory": "Mineral",
+    "cost_price": 180,
+    "selling_price": 250
+  },
+  {
+    "product_code": "EO-15W40",
+    "product_name": "Engine Oil 15W40",
+    "category": "Engine Oil",
+    "subcategory": "Semi-Synthetic",
+    "cost_price": 220,
+    "selling_price": 310
+  },
+  {
+    "product_code": "EO-10W30",
+    "product_name": "Engine Oil 10W30",
+    "category": "Engine Oil",
+    "subcategory": "Fully Synthetic",
+    "cost_price": 350,
+    "selling_price": 480
+  },
+  {
+    "product_code": "EO-5W30",
+    "product_name": "Engine Oil 5W30",
+    "category": "Engine Oil",
+    "subcategory": "Fully Synthetic",
+    "cost_price": 400,
+    "selling_price": 550
+  },
+  {
+    "product_code": "EO-0W20",
+    "product_name": "Engine Oil 0W20",
+    "category": "Engine Oil",
+    "subcategory": "Premium Synthetic",
+    "cost_price": 480,
+    "selling_price": 650
+  },
+  {
+    "product_code": "IL-HYD46",
+    "product_name": "Hydraulic Oil 46",
+    "category": "Industrial Lubricants",
+    "subcategory": "Hydraulic",
+    "cost_price": 150,
+    "selling_price": 220
+  },
+  {
+    "product_code": "IL-HYD68",
+    "product_name": "Hydraulic Oil 68",
+    "category": "Industrial Lubricants",
+    "subcategory": "Hydraulic",
+    "cost_price": 160,
+    "selling_price": 230
+  },
+  {
+    "product_code": "IL-GEAR90",
+    "product_name": "Gear Oil 90",
+    "category": "Industrial Lubricants",
+    "subcategory": "Gear Oil",
+    "cost_price": 190,
+    "selling_price": 270
+  },
+  {
+    "product_code": "IL-TURB32",
+    "product_name": "Turbine Oil 32",
+    "category": "Industrial Lubricants",
+    "subcategory": "Turbine",
+    "cost_price": 200,
+    "selling_price": 290
+  },
+  {
+    "product_code": "IL-COMP100",
+    "product_name": "Compressor Oil 100",
+    "category": "Industrial Lubricants",
+    "subcategory": "Compressor",
+    "cost_price": 210,
+    "selling_price": 300
+  },
+  {
+    "product_code": "GR-MP2",
+    "product_name": "Multi-Purpose Grease MP2",
+    "category": "Grease",
+    "subcategory": "Lithium",
+    "cost_price": 120,
+    "selling_price": 180
+  },
+  {
+    "product_code": "GR-MP3",
+    "product_name": "Multi-Purpose Grease MP3",
+    "category": "Grease",
+    "subcategory": "Lithium",
+    "cost_price": 130,
+    "selling_price": 190
+  },
+  {
+    "product_code": "GR-HTG",
+    "product_name": "High-Temp Grease",
+    "category": "Grease",
+    "subcategory": "Calcium",
+    "cost_price": 160,
+    "selling_price": 240
+  },
+  {
+    "product_code": "GR-WP",
+    "product_name": "Water-Proof Grease",
+    "category": "Grease",
+    "subcategory": "Marine",
+    "cost_price": 150,
+    "selling_price": 225
+  },
+  {
+    "product_code": "SO-TRANS",
+    "product_name": "Transmission Oil ATF",
+    "category": "Specialty Oils",
+    "subcategory": "Transmission",
+    "cost_price": 280,
+    "selling_price": 380
+  },
+  {
+    "product_code": "SO-BRAKE",
+    "product_name": "Brake Fluid DOT 4",
+    "category": "Specialty Oils",
+    "subcategory": "Brake",
+    "cost_price": 300,
+    "selling_price": 420
+  },
+  {
+    "product_code": "SO-COOL",
+    "product_name": "Coolant Concentrate",
+    "category": "Specialty Oils",
+    "subcategory": "Coolant",
+    "cost_price": 180,
+    "selling_price": 260
+  },
+  {
+    "product_code": "SO-2T",
+    "product_name": "2T Engine Oil",
+    "category": "Specialty Oils",
+    "subcategory": "2-Stroke",
+    "cost_price": 240,
+    "selling_price": 340
+  }
+]
