@@ -1,26 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const initialCheckDone = useRef(false)
 
   useEffect(() => {
+    // Safety timeout — if auth check takes more than 5 seconds, stop loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.warn('Auth check timed out — showing login')
+        setLoading(false)
+      }
+    }, 5000)
+
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        // Fetch user role from user_roles table
         fetchUserRole(session.user)
       } else {
         setLoading(false)
       }
+      initialCheckDone.current = true
+    }).catch(() => {
+      setLoading(false)
+      initialCheckDone.current = true
     })
 
-    // Listen for auth changes
+    // Listen for auth changes (but skip if initial check hasn't completed)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!initialCheckDone.current) return
       if (session?.user) {
         await fetchUserRole(session.user)
       } else {
@@ -29,7 +42,10 @@ export function useAuth() {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const fetchUserRole = async (authUser) => {
@@ -40,13 +56,21 @@ export function useAuth() {
         .eq('email', authUser.email)
         .single()
 
-      if (error) throw error
-
-      setUser({
-        ...authUser,
-        full_name: data.full_name,
-        role: data.role,
-      })
+      if (error) {
+        console.error('Error fetching user role:', error)
+        // Still set the user with basic info so they can access the app
+        setUser({
+          ...authUser,
+          full_name: authUser.email,
+          role: 'viewer',
+        })
+      } else {
+        setUser({
+          ...authUser,
+          full_name: data.full_name,
+          role: data.role,
+        })
+      }
     } catch (err) {
       console.error('Error fetching user role:', err)
       setError(err.message)
