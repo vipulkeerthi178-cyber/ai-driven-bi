@@ -391,7 +391,7 @@ function SalesIntelligenceContent({ transactionsData, productsData, mlDemandData
           <h3 className="text-lg font-semibold">AI Demand Prediction - Top 10 Products</h3>
           {demandPrediction[0]?.isML && (
             <span className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">
-              <Bot className="w-3 h-3" /> ML-Powered (Linear Regression)
+              <Bot className="w-3 h-3" /> AI-Powered (Linear Regression)
             </span>
           )}
         </div>
@@ -442,13 +442,13 @@ function SalesIntelligenceContent({ transactionsData, productsData, mlDemandData
           <p className="text-sm text-gray-700">
             {demandPrediction[0]?.isML ? (
               <>
-                <strong>ML Insight:</strong> Predictions generated using Linear Regression (least squares) on {transactionsData.length.toLocaleString()} historical transactions.
+                <strong>AI Insight:</strong> Predictions generated using Linear Regression (least squares) on {transactionsData.length.toLocaleString()} historical transactions.
                 R² confidence reflects how well the model fits each product's demand pattern.
                 {predictionRun && <span className="text-gray-500"> Last run: {new Date(predictionRun.run_at).toLocaleString()}</span>}
               </>
             ) : (
               <>
-                <strong>AI Insight:</strong> Predictions based on historical trend analysis. Run <code>npm run predict</code> to enable ML-powered forecasting.
+                <strong>AI Insight:</strong> Predictions based on historical trend analysis. Run <code>npm run predict</code> to enable AI-powered forecasting.
               </>
             )}
           </p>

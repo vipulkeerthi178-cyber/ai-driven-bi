@@ -216,7 +216,7 @@ function RiskContent({ transactionsData, customersData, mlRiskData, predictionRu
           <h3 className="text-lg font-semibold">Risk Scoring Methodology</h3>
           {hasMLData && (
             <span className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">
-              <Bot className="w-3 h-3" /> ML-Powered (Sigmoid Model)
+              <Bot className="w-3 h-3" /> AI-Powered (Sigmoid Model)
               {predictionRun && <span className="text-purple-600 ml-1">| {new Date(predictionRun.run_at).toLocaleString()}</span>}
             </span>
           )}

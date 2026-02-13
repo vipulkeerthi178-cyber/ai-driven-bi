@@ -139,17 +139,17 @@ export const generateAIInsights = (transactions, customers, mlData = {}) => {
       const avgDelay = (highRisk.reduce((s, r) => s + (parseFloat(r.expected_delay_days) || 0), 0) / highRisk.length).toFixed(0);
       insights.push({
         type: 'warning',
-        message: `ML Risk Model: ${highRisk.length} high-risk customers with ${formatLargeNumber(totalAtRisk)} outstanding. Average expected delay: ${avgDelay} days. ${medRisk.length} customers at medium risk.`
+        message: `AI Risk Model: ${highRisk.length} high-risk customers with ${formatLargeNumber(totalAtRisk)} outstanding. Average expected delay: ${avgDelay} days. ${medRisk.length} customers at medium risk.`
       });
     } else if (medRisk.length > 0) {
       insights.push({
         type: 'info',
-        message: `ML Risk Model: No high-risk customers detected. ${medRisk.length} customers at medium risk — monitor closely.`
+        message: `AI Risk Model: No high-risk customers detected. ${medRisk.length} customers at medium risk — monitor closely.`
       });
     } else {
       insights.push({
         type: 'success',
-        message: `ML Risk Model: All ${riskScores.length} customers are low-risk. Payment health is strong.`
+        message: `AI Risk Model: All ${riskScores.length} customers are low-risk. Payment health is strong.`
       });
     }
   } else {
@@ -177,12 +177,12 @@ export const generateAIInsights = (transactions, customers, mlData = {}) => {
     if (changePercent > 0) {
       insights.push({
         type: 'success',
-        message: `ML Sales Forecast: Next month revenue predicted at ${formatLargeNumber(predictedRevenue)} (+${changePercent}%). ${upTrend} products trending up, ${downTrend} trending down.`
+        message: `AI Sales Forecast: Next month revenue predicted at ${formatLargeNumber(predictedRevenue)} (+${changePercent}%). ${upTrend} products trending up, ${downTrend} trending down.`
       });
     } else {
       insights.push({
         type: 'warning',
-        message: `ML Sales Forecast: Next month revenue predicted at ${formatLargeNumber(predictedRevenue)} (${changePercent}%). ${downTrend} products trending down — review pricing and promotions.`
+        message: `AI Sales Forecast: Next month revenue predicted at ${formatLargeNumber(predictedRevenue)} (${changePercent}%). ${downTrend} products trending down — review pricing and promotions.`
       });
     }
 
@@ -242,7 +242,7 @@ export const generateAIInsights = (transactions, customers, mlData = {}) => {
     const mostLikely = parseFloat(nextCF.most_likely_inflow) || 0;
     insights.push({
       type: 'info',
-      message: `ML Cash Flow: Next month expected inflow ${formatLargeNumber(mostLikely)} (range: ${formatLargeNumber(worstCase)} – ${formatLargeNumber(bestCase)}). Collection rate: ${collectionRate}%.`
+      message: `AI Cash Flow: Next month expected inflow ${formatLargeNumber(mostLikely)} (range: ${formatLargeNumber(worstCase)} – ${formatLargeNumber(bestCase)}). Collection rate: ${collectionRate}%.`
     });
   }
 
@@ -261,7 +261,7 @@ export const generateAIInsights = (transactions, customers, mlData = {}) => {
       ).join(', ');
       insights.push({
         type: 'warning',
-        message: `ML Inventory: ${criticalItems.length} products at stockout risk — ${criticalNames}. ${criticalItems[0].recommendation}`
+        message: `AI Inventory: ${criticalItems.length} products at stockout risk — ${criticalNames}. ${criticalItems[0].recommendation}`
       });
     }
     if (overstocked.length > 0) {
@@ -270,17 +270,17 @@ export const generateAIInsights = (transactions, customers, mlData = {}) => {
       ).join(', ');
       insights.push({
         type: 'info',
-        message: `ML Inventory: ${overstocked.length} products overstocked — ${overstockedNames}. Consider reducing orders to free up working capital.`
+        message: `AI Inventory: ${overstocked.length} products overstocked — ${overstockedNames}. Consider reducing orders to free up working capital.`
       });
     }
     if (criticalItems.length === 0 && overstocked.length === 0) {
       insights.push({
         type: 'success',
-        message: `ML Inventory: All ${inventoryForecasts.length} products have healthy stock levels. No immediate action needed.`
+        message: `AI Inventory: All ${inventoryForecasts.length} products have healthy stock levels. No immediate action needed.`
       });
     }
   } else {
-    insights.push({ type: 'info', message: 'Run ML predictions to get inventory optimization insights.' });
+    insights.push({ type: 'info', message: 'Run AI predictions to get inventory optimization insights.' });
   }
 
   return insights;

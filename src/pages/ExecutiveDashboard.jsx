@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
-import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter } from 'recharts'
-import { TrendingUp, DollarSign, AlertTriangle, Package, Users, Activity, Bot, Settings, X, Clock, RefreshCw } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, BarChart, Bar } from 'recharts'
+import { TrendingUp, DollarSign, AlertTriangle, Package, Users, Activity, Bot, Settings, X, Clock, RefreshCw, ChevronDown, ArrowRight } from 'lucide-react'
 import { useTransactions } from '../hooks/useTransactions'
 import { useCustomers } from '../hooks/useCustomers'
 import { useProducts } from '../hooks/useProducts'
@@ -121,7 +121,7 @@ function MLSettingsModal({ isOpen, onClose, predictionRun }) {
       })
       const data = await res.json()
       if (data.success) {
-        setMessage(`ML pipeline completed: ${data.total_predictions} predictions generated. Refresh page to see results.`)
+        setMessage(`AI pipeline completed: ${data.total_predictions} predictions generated. Refresh page to see results.`)
       } else {
         setMessage(`Error: ${data.error}`)
       }
@@ -139,7 +139,7 @@ function MLSettingsModal({ isOpen, onClose, predictionRun }) {
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-2">
             <Settings className="w-5 h-5 text-purple-600" />
-            <h2 className="text-lg font-semibold">ML Prediction Settings</h2>
+            <h2 className="text-lg font-semibold">AI Prediction Settings</h2>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5 text-gray-500" />
@@ -151,7 +151,7 @@ function MLSettingsModal({ isOpen, onClose, predictionRun }) {
           {predictionRun && (
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">
-                <strong>Last ML Run:</strong> {new Date(predictionRun.run_at).toLocaleString()}
+                <strong>Last AI Run:</strong> {new Date(predictionRun.run_at).toLocaleString()}
               </p>
               <p className="text-sm text-gray-500">
                 {predictionRun.total_predictions} predictions | Avg confidence: {predictionRun.avg_confidence}%
@@ -177,7 +177,7 @@ function MLSettingsModal({ isOpen, onClose, predictionRun }) {
               <span className="text-lg font-bold text-purple-600 w-12 text-center">{intervalHours}h</span>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              ML predictions will auto-run every {intervalHours} hour{intervalHours > 1 ? 's' : ''}
+              AI predictions will auto-run every {intervalHours} hour{intervalHours > 1 ? 's' : ''}
             </p>
           </div>
 
@@ -214,6 +214,9 @@ function MLSettingsModal({ isOpen, onClose, predictionRun }) {
 
 function DashboardContent({ transactions, customers, products, showPrediction, setShowPrediction, mlDemandData, mlRiskData, mlCashFlowData, mlInventoryData, predictionRun }) {
   const [showSettings, setShowSettings] = useState(false)
+  const [activeDrilldown, setActiveDrilldown] = useState(null) // 'revenue' | 'margin' | 'outstanding' | 'risk' | 'inventory' | 'cashflow'
+  const [selectedCategory, setSelectedCategory] = useState(null) // Pie chart click
+  const [selectedCustomer, setSelectedCustomer] = useState(null) // Scatter chart click
 
   // Calculate KPIs
   const kpis = useMemo(() => {
@@ -226,14 +229,12 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
 
     const grossMargin = totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0
 
-    // High-risk customers from ML or fallback
     const highRiskCustomers = mlRiskData && mlRiskData.length > 0
       ? mlRiskData.filter(r => r.risk_level === 'High').length
       : new Set(
           transactions.filter(t => t.payment_status === 'Overdue' || t.payment_status === 'Partial').map(t => t.customer_code)
         ).size
 
-    // Predicted cash inflow from ML or fallback
     let predictedCashInflow
     if (mlCashFlowData && mlCashFlowData.length > 0) {
       predictedCashInflow = parseFloat(mlCashFlowData[0].most_likely_inflow) || 0
@@ -242,7 +243,6 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
       predictedCashInflow = (grouped.slice(-1)[0]?.revenue || 0) * 1.1
     }
 
-    // Inventory at risk from ML stockout data or fallback
     let inventoryAtRisk
     if (mlInventoryData && mlInventoryData.length > 0) {
       const atRiskItems = mlInventoryData.filter(i => parseFloat(i.stockout_probability) > 0.3)
@@ -254,6 +254,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
     return {
       totalRevenue,
       grossMargin,
+      totalCost,
       outstanding: totalOutstanding,
       highRiskCustomers,
       inventoryAtRisk,
@@ -262,14 +263,12 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
     }
   }, [transactions, products, mlRiskData, mlCashFlowData, mlInventoryData])
 
-  // Monthly revenue data — use ML predictions when available
+  // Monthly revenue data
   const monthlyData = useMemo(() => {
     const grouped = groupByMonth(transactions)
 
     if (grouped.length > 0) {
-      // Try ML predictions first
       if (mlDemandData && mlDemandData.length > 0) {
-        // Aggregate ML demand predictions by month → total predicted revenue
         const mlMonthly = {}
         mlDemandData.forEach(p => {
           const month = p.prediction_month.substring(0, 7)
@@ -280,17 +279,12 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
         const predictions = Object.entries(mlMonthly)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([month, revenue]) => ({
-            month,
-            revenue: 0,
-            predicted: Math.round(revenue),
-            isPrediction: true,
-            isML: true
+            month, revenue: 0, predicted: Math.round(revenue), isPrediction: true, isML: true
           }))
 
         return [...grouped, ...predictions]
       }
 
-      // Fallback: hardcoded growth
       const lastMonth = grouped[grouped.length - 1]
       const lastDate = new Date(lastMonth.month)
       const predictions = []
@@ -301,8 +295,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           month: nextDate.toISOString().substring(0, 7),
           revenue: 0,
           predicted: Math.round(lastMonth.revenue * Math.pow(1.08, i)),
-          isPrediction: true,
-          isML: false
+          isPrediction: true, isML: false
         })
       }
       return [...grouped, ...predictions]
@@ -320,7 +313,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
     return getTopCustomersWithRisk(transactions, customers, 10)
   }, [transactions, customers])
 
-  // AI Insights — powered by ML prediction data
+  // AI Insights
   const insights = useMemo(() => {
     return generateAIInsights(transactions, customers, {
       riskScores: mlRiskData,
@@ -330,11 +323,247 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
     })
   }, [transactions, customers, mlRiskData, mlDemandData, mlCashFlowData, mlInventoryData])
 
+  // Drilldown data for KPI cards
+  const drilldownData = useMemo(() => {
+    if (!activeDrilldown) return null
+
+    if (activeDrilldown === 'revenue') {
+      // Revenue by product category
+      const productMap = {}
+      products.forEach(p => { productMap[p.product_code] = p })
+      const catRevenue = {}
+      transactions.forEach(t => {
+        const p = productMap[t.product_code]
+        const cat = p ? p.category : 'Unknown'
+        if (!catRevenue[cat]) catRevenue[cat] = { revenue: 0, count: 0, qty: 0 }
+        catRevenue[cat].revenue += parseFloat(t.total_amount) || 0
+        catRevenue[cat].count++
+        catRevenue[cat].qty += parseFloat(t.quantity_liters) || 0
+      })
+      return {
+        title: 'Revenue Breakdown by Category',
+        type: 'table',
+        headers: ['Category', 'Revenue', 'Orders', 'Quantity (L)'],
+        rows: Object.entries(catRevenue)
+          .sort(([, a], [, b]) => b.revenue - a.revenue)
+          .map(([cat, d]) => [cat, formatCurrency(d.revenue), d.count.toLocaleString(), Math.round(d.qty).toLocaleString()])
+      }
+    }
+
+    if (activeDrilldown === 'margin') {
+      // Margin by product
+      const productMap = {}
+      products.forEach(p => { productMap[p.product_code] = p })
+      const prodMargins = {}
+      transactions.forEach(t => {
+        const p = productMap[t.product_code]
+        if (!p) return
+        const code = p.product_code
+        if (!prodMargins[code]) prodMargins[code] = { name: p.product_name, revenue: 0, cost: 0 }
+        prodMargins[code].revenue += parseFloat(t.total_amount) || 0
+        prodMargins[code].cost += (parseFloat(p.cost_price) || 0) * (parseFloat(t.quantity_liters) || 0)
+      })
+      return {
+        title: 'Gross Margin by Product',
+        type: 'table',
+        headers: ['Product', 'Revenue', 'Cost', 'Margin %'],
+        rows: Object.values(prodMargins)
+          .map(d => ({ ...d, margin: d.revenue > 0 ? ((d.revenue - d.cost) / d.revenue * 100) : 0 }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 10)
+          .map(d => [d.name, formatCurrency(d.revenue), formatCurrency(d.cost), d.margin.toFixed(1) + '%'])
+      }
+    }
+
+    if (activeDrilldown === 'outstanding') {
+      // Outstanding by customer
+      const custOutstanding = {}
+      transactions.filter(t => (parseFloat(t.outstanding_amount) || 0) > 0).forEach(t => {
+        if (!custOutstanding[t.customer_code]) custOutstanding[t.customer_code] = { outstanding: 0, count: 0 }
+        custOutstanding[t.customer_code].outstanding += parseFloat(t.outstanding_amount) || 0
+        custOutstanding[t.customer_code].count++
+      })
+      const custMap = {}
+      customers.forEach(c => { custMap[c.customer_code] = c.customer_name })
+      return {
+        title: 'Outstanding Receivables by Customer',
+        type: 'table',
+        headers: ['Customer', 'Outstanding', 'Pending Invoices', 'Status'],
+        rows: Object.entries(custOutstanding)
+          .sort(([, a], [, b]) => b.outstanding - a.outstanding)
+          .slice(0, 10)
+          .map(([code, d]) => [
+            custMap[code] || code,
+            formatCurrency(d.outstanding),
+            d.count.toString(),
+            d.outstanding > 1000000 ? 'Critical' : d.outstanding > 500000 ? 'Watch' : 'Normal'
+          ])
+      }
+    }
+
+    if (activeDrilldown === 'risk') {
+      // High-risk customer details
+      if (mlRiskData && mlRiskData.length > 0) {
+        const highRisk = mlRiskData.filter(r => r.risk_level === 'High' || r.risk_level === 'Medium')
+          .sort((a, b) => parseFloat(b.risk_score) - parseFloat(a.risk_score))
+          .slice(0, 10)
+        return {
+          title: 'High & Medium Risk Customers',
+          type: 'table',
+          headers: ['Customer', 'Risk Score', 'Risk Level', 'Outstanding', 'Delay Probability'],
+          rows: highRisk.map(r => [
+            r.customer_name || r.customer_code,
+            parseFloat(r.risk_score).toFixed(0) + '/100',
+            r.risk_level,
+            formatCurrency(parseFloat(r.total_outstanding) || 0),
+            (parseFloat(r.payment_delay_probability) * 100).toFixed(0) + '%'
+          ])
+        }
+      }
+      // Fallback
+      const atRisk = [...new Set(transactions.filter(t => t.payment_status === 'Overdue' || t.payment_status === 'Partial').map(t => t.customer_code))]
+      const custMap = {}
+      customers.forEach(c => { custMap[c.customer_code] = c.customer_name })
+      return {
+        title: 'At-Risk Customers (Overdue/Partial)',
+        type: 'table',
+        headers: ['Customer', 'Status'],
+        rows: atRisk.slice(0, 10).map(code => [custMap[code] || code, 'Requires Follow-up'])
+      }
+    }
+
+    if (activeDrilldown === 'inventory') {
+      if (mlInventoryData && mlInventoryData.length > 0) {
+        const atRisk = mlInventoryData
+          .filter(i => parseFloat(i.stockout_probability) > 0.3)
+          .sort((a, b) => parseFloat(b.stockout_probability) - parseFloat(a.stockout_probability))
+        return {
+          title: 'Products at Stockout Risk',
+          type: 'table',
+          headers: ['Product', 'Stockout Prob', 'Days Until Stockout', 'Recommendation'],
+          rows: atRisk.map(i => [
+            i.product_name || i.product_code,
+            (parseFloat(i.stockout_probability) * 100).toFixed(0) + '%',
+            Math.round(parseFloat(i.days_until_stockout)).toString(),
+            i.recommendation || 'Reorder soon'
+          ])
+        }
+      }
+      return { title: 'Inventory Risk', type: 'message', content: 'Run AI predictions to see detailed stockout risk analysis.' }
+    }
+
+    if (activeDrilldown === 'cashflow') {
+      if (mlCashFlowData && mlCashFlowData.length > 0) {
+        return {
+          title: 'Cash Flow Forecast Details',
+          type: 'table',
+          headers: ['Month', 'Most Likely', 'Best Case', 'Worst Case', 'Collection Rate'],
+          rows: mlCashFlowData.map(cf => [
+            cf.forecast_month.substring(0, 7),
+            formatCurrency(parseFloat(cf.most_likely_inflow) || 0),
+            formatCurrency(parseFloat(cf.best_case_inflow) || 0),
+            formatCurrency(parseFloat(cf.worst_case_inflow) || 0),
+            ((parseFloat(cf.collection_rate) || 0) * 100).toFixed(1) + '%'
+          ])
+        }
+      }
+      return { title: 'Cash Flow Prediction', type: 'message', content: 'Run AI predictions to see detailed cash flow forecasting.' }
+    }
+
+    return null
+  }, [activeDrilldown, transactions, products, customers, mlRiskData, mlInventoryData, mlCashFlowData])
+
+  // Category drilldown data for pie chart click
+  const categoryDrilldownData = useMemo(() => {
+    if (!selectedCategory) return null
+    const productMap = {}
+    products.forEach(p => { productMap[p.product_code] = p })
+    const catTxns = transactions.filter(t => {
+      const p = productMap[t.product_code]
+      return p && p.category === selectedCategory
+    })
+    // Group by product within category
+    const prodStats = {}
+    catTxns.forEach(t => {
+      const p = productMap[t.product_code]
+      if (!prodStats[p.product_code]) prodStats[p.product_code] = { name: p.product_name, revenue: 0, qty: 0, orders: 0 }
+      prodStats[p.product_code].revenue += parseFloat(t.total_amount) || 0
+      prodStats[p.product_code].qty += parseFloat(t.quantity_liters) || 0
+      prodStats[p.product_code].orders++
+    })
+    // Monthly trend for this category
+    const monthlyTrend = {}
+    catTxns.forEach(t => {
+      const m = t.transaction_date.substring(0, 7)
+      monthlyTrend[m] = (monthlyTrend[m] || 0) + (parseFloat(t.total_amount) || 0)
+    })
+    return {
+      products: Object.values(prodStats).sort((a, b) => b.revenue - a.revenue),
+      trend: Object.entries(monthlyTrend).sort(([a], [b]) => a.localeCompare(b)).map(([month, revenue]) => ({ month, revenue: Math.round(revenue) })),
+      totalRevenue: catTxns.reduce((s, t) => s + (parseFloat(t.total_amount) || 0), 0),
+      totalOrders: catTxns.length
+    }
+  }, [selectedCategory, transactions, products])
+
+  // Customer drilldown data for scatter chart click
+  const customerDrilldownData = useMemo(() => {
+    if (!selectedCustomer) return null
+    const custTxns = transactions.filter(t => t.customer_code === selectedCustomer.code)
+    const productMap = {}
+    products.forEach(p => { productMap[p.product_code] = p })
+    // Recent transactions
+    const recent = [...custTxns].sort((a, b) => b.transaction_date.localeCompare(a.transaction_date)).slice(0, 8)
+    // Product mix
+    const prodMix = {}
+    custTxns.forEach(t => {
+      const p = productMap[t.product_code]
+      const name = p ? p.product_name : t.product_code
+      prodMix[name] = (prodMix[name] || 0) + (parseFloat(t.total_amount) || 0)
+    })
+    // Payment status breakdown
+    const payStatus = {}
+    custTxns.forEach(t => {
+      payStatus[t.payment_status] = (payStatus[t.payment_status] || 0) + 1
+    })
+    return {
+      recentTxns: recent,
+      productMix: Object.entries(prodMix).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value: Math.round(value) })),
+      paymentStatus: payStatus,
+      totalRevenue: custTxns.reduce((s, t) => s + (parseFloat(t.total_amount) || 0), 0),
+      totalOutstanding: custTxns.reduce((s, t) => s + (parseFloat(t.outstanding_amount) || 0), 0),
+      totalOrders: custTxns.length
+    }
+  }, [selectedCustomer, transactions, products])
+
   const COLORS = ['#1E3A8A', '#14B8A6', '#F59E0B', '#EF4444'];
 
+  const handleKPIClick = (type) => {
+    setSelectedCategory(null)
+    setSelectedCustomer(null)
+    setActiveDrilldown(activeDrilldown === type ? null : type)
+  }
+
+  const handlePieClick = (data) => {
+    setActiveDrilldown(null)
+    setSelectedCustomer(null)
+    setSelectedCategory(selectedCategory === data.name ? null : data.name)
+  }
+
+  const handleScatterClick = (data) => {
+    if (!data || !data.activePayload) return
+    const customer = data.activePayload[0]?.payload
+    if (!customer) return
+    setActiveDrilldown(null)
+    setSelectedCategory(null)
+    setSelectedCustomer(selectedCustomer?.code === customer.code ? null : customer)
+  }
+
   // KPI Card Component
-  const KPICard = ({ icon: Icon, label, value, subtitle, color }) => (
-    <div className={`kpi-card kpi-card-${color}`}>
+  const KPICard = ({ icon: Icon, label, value, subtitle, color, drilldownType }) => (
+    <div
+      className={`kpi-card kpi-card-${color} cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${activeDrilldown === drilldownType ? 'ring-2 ring-purple-500 shadow-lg' : ''}`}
+      onClick={() => handleKPIClick(drilldownType)}
+    >
       <div className="flex items-start justify-between mb-3">
         <div className={`p-3 rounded-lg ${
           color === 'green' ? 'bg-green-100' :
@@ -345,12 +574,62 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
             color === 'amber' ? 'text-yellow-600' : 'text-red-600'
           }`} />
         </div>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${activeDrilldown === drilldownType ? 'rotate-180 text-purple-600' : ''}`} />
       </div>
       <div className="text-sm font-medium text-gray-600 mb-1">{label}</div>
       <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
       {subtitle && <div className="text-sm text-gray-500">{subtitle}</div>}
+      <div className="text-xs text-purple-500 mt-2 font-medium">Click to drill down</div>
     </div>
   );
+
+  // Drilldown Panel Component
+  const DrilldownPanel = ({ data }) => {
+    if (!data) return null
+    return (
+      <div className="bg-white rounded-xl shadow-lg border border-purple-200 p-6 mb-6 animate-in slide-in-from-top">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-purple-900 flex items-center gap-2">
+            <ArrowRight className="w-5 h-5 text-purple-600" />
+            {data.title}
+          </h3>
+          <button onClick={() => setActiveDrilldown(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+        {data.type === 'message' ? (
+          <p className="text-gray-600 text-sm">{data.content}</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b bg-purple-50">
+                  {data.headers.map((h, i) => (
+                    <th key={i} className={`py-3 px-4 text-sm font-semibold text-purple-900 ${i > 0 ? 'text-right' : 'text-left'}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {data.rows.map((row, ri) => (
+                  <tr key={ri} className="border-b hover:bg-purple-50 transition-colors">
+                    {row.map((cell, ci) => (
+                      <td key={ci} className={`py-3 px-4 text-sm ${ci > 0 ? 'text-right font-mono' : 'font-medium'}`}>
+                        {cell === 'Critical' ? <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">{cell}</span> :
+                         cell === 'Watch' ? <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">{cell}</span> :
+                         cell === 'High' ? <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">{cell}</span> :
+                         cell === 'Medium' ? <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">{cell}</span> :
+                         cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -360,26 +639,27 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Executive Dashboard</h1>
-            <p className="text-gray-600">Business health, risks, and growth at a glance</p>
+            <p className="text-gray-600">Click any card or chart element to drill down into details</p>
           </div>
           <button
             onClick={() => setShowSettings(true)}
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
           >
             <Settings className="w-4 h-4" />
-            ML Settings
+            AI Settings
           </button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <KPICard
           icon={DollarSign}
           label="Total Revenue (15M)"
           value={formatLargeNumber(kpis.totalRevenue)}
           subtitle="Year to Date"
           color={kpis.totalRevenue > 200000000 ? 'green' : 'amber'}
+          drilldownType="revenue"
         />
         <KPICard
           icon={TrendingUp}
@@ -387,6 +667,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           value={formatPercentage(kpis.grossMargin)}
           subtitle="Healthy margin"
           color={kpis.grossMargin > 25 ? 'green' : kpis.grossMargin > 15 ? 'amber' : 'red'}
+          drilldownType="margin"
         />
         <KPICard
           icon={AlertTriangle}
@@ -394,6 +675,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           value={formatLargeNumber(kpis.outstanding)}
           subtitle={`${((kpis.outstanding / kpis.totalRevenue) * 100).toFixed(1)}% of revenue`}
           color={kpis.outstanding < 35000000 ? 'green' : kpis.outstanding < 40000000 ? 'amber' : 'red'}
+          drilldownType="outstanding"
         />
         <KPICard
           icon={Users}
@@ -401,6 +683,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           value={kpis.highRiskCustomers}
           subtitle="Require attention"
           color={kpis.highRiskCustomers < 5 ? 'green' : kpis.highRiskCustomers < 10 ? 'amber' : 'red'}
+          drilldownType="risk"
         />
         <KPICard
           icon={Package}
@@ -408,6 +691,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           value={kpis.hasMLData ? `${kpis.inventoryAtRisk} products` : formatLargeNumber(kpis.inventoryAtRisk)}
           subtitle={kpis.hasMLData ? "Stockout probability > 30%" : "Slow-moving stock"}
           color={kpis.hasMLData ? (kpis.inventoryAtRisk === 0 ? 'green' : kpis.inventoryAtRisk < 5 ? 'amber' : 'red') : (kpis.inventoryAtRisk < 5000000 ? 'green' : 'amber')}
+          drilldownType="inventory"
         />
         <KPICard
           icon={Activity}
@@ -415,8 +699,12 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           value={formatLargeNumber(kpis.predictedCashInflow)}
           subtitle="Next month (Feb 2026)"
           color="green"
+          drilldownType="cashflow"
         />
       </div>
+
+      {/* KPI Drilldown Panel */}
+      {drilldownData && <DrilldownPanel data={drilldownData} />}
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -441,7 +729,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
               <XAxis
                 dataKey="month"
                 tick={{ fontSize: 12 }}
-                tickFormatter={(value) => value.substring(5)} // Show only MM
+                tickFormatter={(value) => value.substring(5)}
               />
               <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => formatLargeNumber(value)} />
               <Tooltip
@@ -472,9 +760,19 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           </ResponsiveContainer>
         </div>
 
-        {/* Profitability by Category */}
+        {/* Profitability by Category — CLICKABLE */}
         <div className="chart-container">
-          <h3 className="text-lg font-semibold mb-4">Profitability by Product Category</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Profitability by Product Category</h3>
+            {selectedCategory && (
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className="text-xs text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> Clear selection
+              </button>
+            )}
+          </div>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -486,24 +784,112 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
                 outerRadius={100}
                 fill="#8884d8"
                 dataKey="value"
+                onClick={handlePieClick}
+                cursor="pointer"
               >
                 {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                    opacity={selectedCategory && selectedCategory !== entry.name ? 0.3 : 1}
+                    stroke={selectedCategory === entry.name ? '#7C3AED' : 'none'}
+                    strokeWidth={selectedCategory === entry.name ? 3 : 0}
+                  />
                 ))}
               </Pie>
               <Tooltip formatter={(value) => formatCurrency(value)} />
             </PieChart>
           </ResponsiveContainer>
+          <div className="text-xs text-purple-500 text-center mt-1 font-medium">Click a slice to see product details</div>
         </div>
       </div>
 
+      {/* Category Drilldown Panel */}
+      {selectedCategory && categoryDrilldownData && (
+        <div className="bg-white rounded-xl shadow-lg border border-purple-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-purple-900 flex items-center gap-2">
+              <ArrowRight className="w-5 h-5 text-purple-600" />
+              {selectedCategory} — Category Breakdown
+            </h3>
+            <button onClick={() => setSelectedCategory(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="p-3 bg-blue-50 rounded-lg text-center">
+              <div className="text-xs text-gray-500">Total Revenue</div>
+              <div className="text-lg font-bold text-blue-900">{formatLargeNumber(categoryDrilldownData.totalRevenue)}</div>
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg text-center">
+              <div className="text-xs text-gray-500">Total Orders</div>
+              <div className="text-lg font-bold text-green-900">{categoryDrilldownData.totalOrders}</div>
+            </div>
+            <div className="p-3 bg-purple-50 rounded-lg text-center">
+              <div className="text-xs text-gray-500">Products</div>
+              <div className="text-lg font-bold text-purple-900">{categoryDrilldownData.products.length}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Product table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-purple-50">
+                    <th className="text-left py-2 px-3 text-sm font-semibold text-purple-900">Product</th>
+                    <th className="text-right py-2 px-3 text-sm font-semibold text-purple-900">Revenue</th>
+                    <th className="text-right py-2 px-3 text-sm font-semibold text-purple-900">Orders</th>
+                    <th className="text-right py-2 px-3 text-sm font-semibold text-purple-900">Qty (L)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categoryDrilldownData.products.map((p, i) => (
+                    <tr key={i} className="border-b hover:bg-purple-50">
+                      <td className="py-2 px-3 text-sm font-medium">{p.name}</td>
+                      <td className="py-2 px-3 text-sm text-right font-mono">{formatCurrency(p.revenue)}</td>
+                      <td className="py-2 px-3 text-sm text-right">{p.orders}</td>
+                      <td className="py-2 px-3 text-sm text-right">{Math.round(p.qty).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Monthly trend chart */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Monthly Trend — {selectedCategory}</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={categoryDrilldownData.trend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 10 }} tickFormatter={(v) => v.substring(5)} />
+                  <YAxis tickFormatter={(v) => formatLargeNumber(v)} tick={{ fontSize: 10 }} />
+                  <Tooltip formatter={(v) => formatCurrency(v)} />
+                  <Bar dataKey="revenue" fill="#7C3AED" name="Revenue" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Top Customers - Risk vs Revenue */}
+        {/* Top Customers - Risk vs Revenue — CLICKABLE */}
         <div className="chart-container">
-          <h3 className="text-lg font-semibold mb-4">Top 10 Customers – Risk vs Revenue</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Top 10 Customers – Risk vs Revenue</h3>
+            {selectedCustomer && (
+              <button
+                onClick={() => setSelectedCustomer(null)}
+                className="text-xs text-purple-600 hover:text-purple-800 font-medium flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> Clear selection
+              </button>
+            )}
+          </div>
           <ResponsiveContainer width="100%" height={300}>
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }} onClick={handleScatterClick}>
               <CartesianGrid />
               <XAxis
                 type="number"
@@ -527,25 +913,24 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
                   return formatCurrency(value);
                 }}
                 labelFormatter={(label, payload) => {
-                  if (payload && payload[0]) {
-                    return payload[0].payload.name;
-                  }
+                  if (payload && payload[0]) return payload[0].payload.name;
                   return label;
                 }}
               />
-              <Scatter name="Customers" data={topCustomers} fill="#1E3A8A">
+              <Scatter name="Customers" data={topCustomers} fill="#1E3A8A" cursor="pointer">
                 {topCustomers.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.riskScore > 60 ? '#EF4444' : entry.riskScore > 30 ? '#F59E0B' : '#22C55E'}
+                    opacity={selectedCustomer && selectedCustomer.code !== entry.code ? 0.3 : 1}
+                    stroke={selectedCustomer?.code === entry.code ? '#7C3AED' : 'none'}
+                    strokeWidth={selectedCustomer?.code === entry.code ? 3 : 0}
                   />
                 ))}
               </Scatter>
             </ScatterChart>
           </ResponsiveContainer>
-          <div className="mt-2 text-xs text-gray-500 text-center">
-            Bubble size represents outstanding amount
-          </div>
+          <div className="text-xs text-purple-500 text-center mt-1 font-medium">Click a dot to see customer details</div>
         </div>
 
         {/* AI Insights */}
@@ -554,7 +939,7 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
             <h3 className="text-lg font-semibold">AI Insights</h3>
             {kpis.hasMLData && (
               <span className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">
-                <Bot className="w-3 h-3" /> ML-Powered
+                <Bot className="w-3 h-3" /> AI-Powered
               </span>
             )}
           </div>
@@ -587,6 +972,101 @@ function DashboardContent({ transactions, customers, products, showPrediction, s
           </div>
         </div>
       </div>
+
+      {/* Customer Drilldown Panel */}
+      {selectedCustomer && customerDrilldownData && (
+        <div className="bg-white rounded-xl shadow-lg border border-purple-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-purple-900 flex items-center gap-2">
+              <Users className="w-5 h-5 text-purple-600" />
+              {selectedCustomer.name} — Customer Details
+            </h3>
+            <button onClick={() => setSelectedCustomer(null)} className="p-1 hover:bg-gray-100 rounded-lg">
+              <X className="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+
+          {/* Customer KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="p-3 bg-blue-50 rounded-lg text-center">
+              <div className="text-xs text-gray-500">Total Revenue</div>
+              <div className="text-lg font-bold text-blue-900">{formatLargeNumber(customerDrilldownData.totalRevenue)}</div>
+            </div>
+            <div className="p-3 bg-red-50 rounded-lg text-center">
+              <div className="text-xs text-gray-500">Outstanding</div>
+              <div className="text-lg font-bold text-red-900">{formatLargeNumber(customerDrilldownData.totalOutstanding)}</div>
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg text-center">
+              <div className="text-xs text-gray-500">Total Orders</div>
+              <div className="text-lg font-bold text-green-900">{customerDrilldownData.totalOrders}</div>
+            </div>
+            <div className="p-3 bg-yellow-50 rounded-lg text-center">
+              <div className="text-xs text-gray-500">Risk Score</div>
+              <div className="text-lg font-bold text-yellow-900">{selectedCustomer.riskScore}/100</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Product Mix */}
+            <div>
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Product Mix</h4>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={customerDrilldownData.productMix.slice(0, 6)} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" tickFormatter={(v) => formatLargeNumber(v)} tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="name" width={120} tick={{ fontSize: 10 }} />
+                  <Tooltip formatter={(v) => formatCurrency(v)} />
+                  <Bar dataKey="value" fill="#1E3A8A" name="Revenue" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Recent Transactions */}
+            <div className="overflow-x-auto">
+              <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent Transactions</h4>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-gray-50">
+                    <th className="text-left py-2 px-3 text-xs font-semibold text-gray-600">Date</th>
+                    <th className="text-right py-2 px-3 text-xs font-semibold text-gray-600">Amount</th>
+                    <th className="text-center py-2 px-3 text-xs font-semibold text-gray-600">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customerDrilldownData.recentTxns.map((t, i) => (
+                    <tr key={i} className="border-b">
+                      <td className="py-2 px-3 text-xs">{t.transaction_date}</td>
+                      <td className="py-2 px-3 text-xs text-right font-mono">{formatCurrency(parseFloat(t.total_amount))}</td>
+                      <td className="py-2 px-3 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          t.payment_status === 'Paid' ? 'bg-green-100 text-green-800' :
+                          t.payment_status === 'Overdue' ? 'bg-red-100 text-red-800' :
+                          t.payment_status === 'Partial' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-blue-100 text-blue-800'
+                        }`}>{t.payment_status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Payment Status Summary */}
+          <div className="mt-4 flex gap-3">
+            {Object.entries(customerDrilldownData.paymentStatus).map(([status, count]) => (
+              <div key={status} className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                status === 'Paid' ? 'bg-green-100 text-green-800' :
+                status === 'Overdue' ? 'bg-red-100 text-red-800' :
+                status === 'Partial' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-blue-100 text-blue-800'
+              }`}>
+                {status}: {count}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

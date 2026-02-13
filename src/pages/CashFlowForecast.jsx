@@ -166,7 +166,7 @@ function CashFlowContent({ transactionsData, customersData, mlCashFlowData, pred
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Cash Flow Prediction</h1>
-            <p className="text-gray-600">See future cash position clearly with ML-powered forecasting</p>
+            <p className="text-gray-600">See future cash position clearly with AI-powered forecasting</p>
           </div>
           {hasMLData && (
             <span className="flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">
@@ -406,7 +406,7 @@ function CashFlowContent({ transactionsData, customersData, mlCashFlowData, pred
                   <strong>Forecast confidence:</strong> {hasMLData
                     ? `${cashFlowData.find(d => d.isML)?.confidence?.toFixed(1) || 'N/A'}% — Holt's Double Exponential Smoothing on ${transactionsData.length.toLocaleString()} transactions.`
                     : '85% based on 15 months of historical payment patterns.'}
-                  {predictionRun && hasMLData && <span className="text-gray-500"> Last ML run: {new Date(predictionRun.run_at).toLocaleString()}</span>}
+                  {predictionRun && hasMLData && <span className="text-gray-500"> Last AI run: {new Date(predictionRun.run_at).toLocaleString()}</span>}
                 </p>
               </div>
             </div>
